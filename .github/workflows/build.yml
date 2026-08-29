@@ -18,13 +18,16 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          java-version: '11'
+          java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
+
+      - name: Repair Project Structure
+        run: flutter create .
 
       - name: Get Flutter Packages
         run: flutter pub get
