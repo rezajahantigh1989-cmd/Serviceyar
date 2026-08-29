@@ -2,15 +2,14 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -25,31 +24,24 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Create Flutter Project Structure
+      - name: Prepare Flutter Project
         run: |
-          flutter create --org com.serviceyar --project-name serviceyar app_temp
-          cp -r app_temp/* .
-          cp -r app_temp/.* . 2>/dev/null || true
-          rm -rf app_temp
+          # پشتیبان‌گیری از main.dart شما
+          cp lib/main.dart ./temp_main.dart
+          # پاکسازی و ساخت اسکلت پروژه
+          rm -rf * .git*
+          flutter create --org com.serviceyar --project-name serviceyar .
+          # بازگرداندن فایل‌های شما
           mkdir -p lib
-          if [ -f main.dart ]; then
-            cp main.dart lib/main.dart
-          fi
- خودرو و پلاک با آیکون چرخ‌دنده ⚙️، و محاسبه وضعیت قطعات:
-```dart
-import 'package:flutter/material.dart';
+          mv ./temp_main.dart lib/main.dart
+          # تنظیم نام فارسی برنامه در اندروید
+          sed -i 's/android:label="serviceyar"/android:label="سرویس‌یار"/g' android/app/src/main/AndroidManifest.xml
 
-void main() {
-  runApp(const ServiceYarApp());
-}
+      - name: Build APK
+        run: flutter build apk --release
 
-class ServiceYarApp extends StatelessWidget {
-  const ServiceYarApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-return
-uses: actions/upload-artifact@v4
-with:
-name: ServiceYar-Release-APK
-path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ServiceYar-App
+          path: build/app/outputs/flutter-apk/app-release.apk
