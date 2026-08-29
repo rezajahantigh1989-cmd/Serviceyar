@@ -1,46 +1,26 @@
-name: Build Android APK
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+name: Flutter Build
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
         with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
           channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Setup Project and Build APK
+      - name: Build APK
         run: |
-          # ساخت پروژه کامل فلاتر در یک پوشه تازه
-          flutter create --org com.serviceyar --project-name serviceyar app_build
+          # این بخش اندروید را تولید می‌کند
+          flutter create . 
           
-          # کپی فایل اصلی برنامه شما
-          cp lib/main.dart app_build/lib/main.dart
+          # این بخش minSdkVersion را به 21 تغییر می‌دهد
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
           
-          # تغییر نام نمایشی برنامه به سرویس‌یار
-          cd app_build
-          sed -i 's/android:label="serviceyar"/android:label="سرویس‌یار"/g' android/app/src/main/AndroidManifest.xml
-          
-          # ساخت فایل نصبی APK
+          # بیلد نهایی
           flutter build apk --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ServiceYar-App
-          path: app_build/build/app/outputs/flutter-apk/app-release.apk
