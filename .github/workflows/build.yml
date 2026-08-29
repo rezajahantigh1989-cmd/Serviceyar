@@ -2,38 +2,37 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
 
-      - name: Create Flutter Project
-        run: |
-          cd ..
-          flutter create --org com.serviceyar app
-          cp -r Serviceyar/lib/* app/lib/ 2>/dev/null || true
-          cp Serviceyar/lib/main.dart app/lib/main.dart
-          cd app
-          flutter build apk --release
+    - name: Prepare Complete Flutter Project
+      run: |
+        flutter create --org com.serviceyar app_temp
+        cp -f lib/main.dart app_temp/lib/main.dart
+        cd app_temp
+        flutter build apk --release
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ServiceYar-Release-APK
-          path: ../app/build/app/outputs/flutter-apk/app-release.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: ServiceYar-APK
+        path: app_temp/build/app/outputs/flutter-apk/app-release.apk
