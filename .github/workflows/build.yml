@@ -1,4 +1,4 @@
-name: Build ServiceYar APK
+name: Build APK
 
 on:
   push:
@@ -7,36 +7,26 @@ on:
 
 jobs:
   build:
-    name: Build Release APK
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java Development Kit (JDK)
-        uses: actions/setup-java@v5
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+          
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
-
-      - name: Repair Project Structure
-        run: flutter create .
-
-      - name: Get Flutter Packages
-        run: flutter pub get
-
-      - name: Build Release APK
-        run: flutter build apk --release
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+          
+      - name: Build Release
+        run: |
+          flutter pub get
+          flutter build apk --release
+          
+      - uses: actions/upload-artifact@v4
         with:
           name: ServiceYar-APK
           path: build/app/outputs/flutter-apk/app-release.apk
