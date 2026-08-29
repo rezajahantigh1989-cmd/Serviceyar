@@ -24,24 +24,23 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Prepare Flutter Project
+      - name: Setup Project and Build APK
         run: |
-          # پشتیبان‌گیری از main.dart شما
-          cp lib/main.dart ./temp_main.dart
-          # پاکسازی و ساخت اسکلت پروژه
-          rm -rf * .git*
-          flutter create --org com.serviceyar --project-name serviceyar .
-          # بازگرداندن فایل‌های شما
-          mkdir -p lib
-          mv ./temp_main.dart lib/main.dart
-          # تنظیم نام فارسی برنامه در اندروید
+          # ساخت پروژه کامل فلاتر در یک پوشه تازه
+          flutter create --org com.serviceyar --project-name serviceyar app_build
+          
+          # کپی فایل اصلی برنامه شما
+          cp lib/main.dart app_build/lib/main.dart
+          
+          # تغییر نام نمایشی برنامه به سرویس‌یار
+          cd app_build
           sed -i 's/android:label="serviceyar"/android:label="سرویس‌یار"/g' android/app/src/main/AndroidManifest.xml
-
-      - name: Build APK
-        run: flutter build apk --release
+          
+          # ساخت فایل نصبی APK
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ServiceYar-App
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: app_build/build/app/outputs/flutter-apk/app-release.apk
