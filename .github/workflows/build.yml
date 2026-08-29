@@ -1,26 +1,58 @@
 name: Flutter Build
-on: [push]
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java Development Kit (JDK)
+        uses: actions/setup-java@v4
         with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
           channel: 'stable'
-      
-      - name: Install dependencies
+          cache: true
+
+      - name: Generate Android Project & Configure SDK
+        run: |
+          flutter create . --platforms=android --org com.serviceyar.app
+          
+          # تنظیم minSdkVersion به 21 در صورت وجود build.gradle معمولی
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+            sed -i 's/minSdkVersion [0-9]*/minSdkVersion 21/g' android/app/build.gradle
+          fi
+
+          # تنظیم minSdk به 21 در صورت وجود build.gradle.kts کاتلین
+          if [ -f "android/app/build.gradle.kts" ]; then
+            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts
+            sed -i 's/minSdk = [0-9]*/minSdk = 21/g' android/app/build.gradle.kts
+          fi
+
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: |
-          # این بخش اندروید را تولید می‌کند
-          flutter create . 
-          
-          # این بخش minSdkVersion را به 21 تغییر می‌دهد
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
-          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
-          
-          # بیلد نهایی
-          flutter build apk --release
+      - name: Build APK Release
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ServiceYar-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
