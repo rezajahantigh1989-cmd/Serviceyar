@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -10,29 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.6'
-        channel: 'stable'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
 
-    - name: Prepare Complete Flutter Project
-      run: |
-        flutter create --org com.serviceyar app_temp
-        cp -f lib/main.dart app_temp/lib/main.dart
-        cd app_temp
-        flutter build apk --release
+      - name: Create Flutter Project Structure
+        run: |
+          flutter create --org com.serviceyar --project-name serviceyar app_temp
+          cp -r app_temp/* .
+          cp -r app_temp/.* . 2>/dev/null || true
+          rm -rf app_temp
+          mkdir -p lib
+          if [ -f main.dart ]; then
+            cp main.dart lib/main.dart
+          fi
+ خودرو و پلاک با آیکون چرخ‌دنده ⚙️، و محاسبه وضعیت قطعات:
+```dart
+import 'package:flutter/material.dart';
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: ServiceYar-APK
-        path: app_temp/build/app/outputs/flutter-apk/app-release.apk
+void main() {
+  runApp(const ServiceYarApp());
+}
+
+class ServiceYarApp extends StatelessWidget {
+  const ServiceYarApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+return
+uses: actions/upload-artifact@v4
+with:
+name: ServiceYar-Release-APK
+path: build/app/outputs/flutter-apk/app-release.apk
